@@ -1,0 +1,11 @@
+{
+    "name": "pengboomouch/audere",
+    "description": "Automatic Dependency Resolution",
+    "license": "MIT",
+    "require": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {"Audere\\": "src/"}
+    }
+}
