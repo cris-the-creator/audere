@@ -8,21 +8,29 @@ class Container
     private array $parameters;
     private DependencyResolution $dependencyResolution;
 
-    public function __construct()
+    public function __construct(?InjectionBuilder $builder = null)
     {
-        $this->dependencyResolution = new DependencyResolution();
+        $this->parameters = [];
+        $this->dependencyResolution = new DependencyResolution($builder);
     }
 
     public function get(string $className): mixed
     {
         $parameters = $this->fetchParameters($className);
 
-        $this->resolveParameters($parameters);
+        $args = $this->resolveParameters($parameters);
+
+        return $this->buildClass($className, $args);
     }
 
-    private function resolveParameters(array $parameters): void
+    private function buildClass($className, $args): mixed
     {
-        $this->dependencyResolution->resolveParameters($parameters);
+        return new $className(...$args);
+    }
+
+    private function resolveParameters(array $parameters): array
+    {
+        return $this->dependencyResolution->resolveParameters($parameters);
     }
 
     private function fetchParameters(string $className): array

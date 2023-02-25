@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 namespace Audere;
 
+use Audere\Exception\ClassException;
+
 class DependencyResolution
 {
-    public function __construct()
+    public function __construct(private readonly ?InjectionBuilder $builder = null)
     {}
 
+    /**
+     * @throws ClassException
+     */
     public function fetchParameters(string $className): array
     {
         if (!class_exists($className)) {
-            throw new \Exception('Class not found');
+            throw new ClassException('Class not found');
         }
 
         $constructorParameter = [];
@@ -26,14 +31,38 @@ class DependencyResolution
         return $constructorParameter;
     }
 
-    public function resolveParameters(array $parameters)
+    /**
+     * @throws ClassException
+     */
+    public function resolveParameters(array $parameters): array
     {
         $args = [];
         foreach ($parameters as $index => $parameter) {
+            // Resolve class
+            if (is_string($parameter))  {
+                $args[$index] = $this->resolveClass($parameter);
+            }
 
-            $args[] = &$value;
+            // Resolve Injection
+            if ($parameter instanceof Inject) {
+                $args[$index] = $this->resolveInjection($parameter->getName());
+            }
+
         }
         return $args;
+    }
+
+    private function resolveInjection($parameter): mixed
+    {
+        return $this->builder->get($parameter);
+    }
+
+    private function resolveClass($className): object
+    {
+        if (!class_exists($className)) {
+            throw new ClassException('Class could not be resolved.');
+        }
+        return new $className();
     }
 
     private function getParameters(\ReflectionFunctionAbstract $constructor): array
@@ -44,12 +73,16 @@ class DependencyResolution
                 continue;
             }
 
+            foreach ($parameter->getAttributes() as $attribute) {
+                $params[$index] = $attribute->newInstance();
+            }
+
             $type = $parameter->getType();
             if (!$type) {
                 continue;
             }
             if (!$type instanceof \ReflectionNamedType) {
-                continue;
+                $this->getInjectParameter($parameter);
             }
             if ($type->isBuiltin()) {
                 continue;
@@ -57,6 +90,7 @@ class DependencyResolution
 
             $params[$index] = $type->getName();
         }
+
         return $params;
     }
 }
