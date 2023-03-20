@@ -6,7 +6,7 @@ namespace Audere;
 
 class InjectionBuilder
 {
-    private array $parameters;
+    private array $parameters = [];
 
     /**
      * @todo Import parameters from yaml file
