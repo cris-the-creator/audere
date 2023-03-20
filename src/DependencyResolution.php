@@ -52,12 +52,17 @@ class DependencyResolution
         return $args;
     }
 
-    private function resolveInjection($parameter): mixed
+    private function resolveInjection(string $parameter): mixed
     {
         return $this->builder->get($parameter);
     }
 
-    private function resolveClass($className): object
+    /**
+     * @param string $className
+     * @return object
+     * @throws ClassException
+     */
+    private function resolveClass(string $className): object
     {
         if (!class_exists($className)) {
             throw new ClassException('Class could not be resolved.');
